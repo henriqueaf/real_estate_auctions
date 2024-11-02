@@ -1,0 +1,35 @@
+# Before run this docker compose file, check env variables
+# inside .env file.
+##########################################################
+# Run this file on terminal using docker compose V2:
+# => docker compose run --rm app
+
+services:
+  db:
+    image: postgres:14-alpine
+    container_name: ${APP_NAME}_postgres
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+
+  app:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: ${MIX_ENV}
+      args:
+        - ARG_APP_NAME=${APP_NAME}
+    image: ${APP_NAME}:${MIX_ENV}
+    ports:
+      - 4000:4000
+    env_file: .env.container
+    container_name: ${APP_NAME}
+    # stdin_open: true
+    # tty: true
+    stop_signal: SIGKILL
+    command: sh docker/start.sh
+    volumes:
+      - .:/${APP_NAME}
+    depends_on:
+      - db

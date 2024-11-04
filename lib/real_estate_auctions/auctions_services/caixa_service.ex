@@ -1,7 +1,7 @@
 defmodule RealEstateAuctions.AuctionsServices.CaixaService do
   require Logger
   alias RealEstateAuctions.ApiClients.{CaixaApiClient}
-  alias RealEstateAuctions.{FileUtils, DateUtils}
+  alias RealEstateAuctions.{FileUtils}
   alias RealEstateAuctions.AuctionsServices.CaixaService.{CSVParser}
 
   defp available_states(), do: ["CE"]

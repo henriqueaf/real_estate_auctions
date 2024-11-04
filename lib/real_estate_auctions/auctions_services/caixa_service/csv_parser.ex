@@ -28,16 +28,16 @@ defmodule RealEstateAuctions.AuctionsServices.CaixaService.CSVParser do
     iex> RealEstateAuctions.AuctionsServices.CaixaService.CSVParser.get_auctions_list("/path/to/csv/file.csv")
     [
       %{
-        value: "138.000,00",
+        estimated_price: "138.000,00",
         state: "CE",
         address: "TRAVESSA EUROPA  , A, N. 20A",
         description: "Casa, 0.00 de área total, 61.07 de área privativa, 113.60 de área do terreno.",
         number: "8444416386866",
         city: "ABAIARA",
         neighborhood: "VERTENTE",
-        price: "76.253,02",
+        start_price: "76.253,02",
         discount_percent: "44.75",
-        seles_mode: "Venda Direta Online",
+        sale_mode: "Venda Direta Online",
         address_link: "https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp?hdnOrigem=index&hdnimovel=8444416386866"
       }
     ]
@@ -45,7 +45,7 @@ defmodule RealEstateAuctions.AuctionsServices.CaixaService.CSVParser do
   """
   def get_auctions_list(file_path_or_csv_content) do
     csv_to_list(file_path_or_csv_content)
-    |> Enum.slice(4..-1)
+    |> Enum.slice(4..-1//1)
     |> Enum.map(fn line -> Enum.zip(csv_headers(), line) |> Map.new end)
   end
 
@@ -57,7 +57,7 @@ defmodule RealEstateAuctions.AuctionsServices.CaixaService.CSVParser do
   end
 
   defp csv_headers() do
-    ~w{number state city neighborhood address price value discount_percent description seles_mode address_link}a
+    ~w{number state city neighborhood address start_price estimated_price discount_percent description sale_mode address_link}a
   end
 
   defp csv_file_to_list(file_path) do

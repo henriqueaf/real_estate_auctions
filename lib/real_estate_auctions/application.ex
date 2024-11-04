@@ -21,8 +21,8 @@ defmodule RealEstateAuctions.Application do
 
       # Custom Workers
       %{
-        id: FetchAuctionsScheduler,
-        start: {RealEstateAuctions.FetchAuctionsScheduler, :start, []},
+        id: Caixa.FetchAuctionsScheduler,
+        start: {RealEstateAuctions.Caixa.FetchAuctionsScheduler, :start, []},
         restart: :permanent,
         type: :worker
       },

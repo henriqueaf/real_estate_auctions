@@ -1,14 +1,14 @@
-defmodule RealEstateAuctions.AuctionsServices.CaixaService.CSVParser do
+defmodule RealEstateAuctions.Caixa.CSVParser do
   @doc """
   Returns only the generate date info from CSV file.
   It accepts a file path as param or the csv content as string/binary.
 
   ## Examples
 
-    iex> RealEstateAuctions.AuctionsServices.CaixaService.CSVParser.get_generate_date("/path/to/csv/file.csv")
+    iex> RealEstateAuctions.Caixa.CSVParser.get_generate_date("/path/to/csv/file.csv")
     "01/11/2024"
 
-    iex> RealEstateAuctions.AuctionsServices.CaixaService.CSVParser.get_generate_date("\n Lista de Imóveis da Caixa;;Data de geração:;01/11/2024;;;;;;;")
+    iex> RealEstateAuctions.Caixa.CSVParser.get_generate_date("\n Lista de Imóveis da Caixa;;Data de geração:;01/11/2024;;;;;;;")
     "01/11/2024"
 
   """
@@ -25,7 +25,7 @@ defmodule RealEstateAuctions.AuctionsServices.CaixaService.CSVParser do
 
   ## Examples
 
-    iex> RealEstateAuctions.AuctionsServices.CaixaService.CSVParser.get_auctions_list("/path/to/csv/file.csv")
+    iex> RealEstateAuctions.Caixa.CSVParser.get_auctions_list("/path/to/csv/file.csv")
     [
       %{
         estimated_price: "138.000,00",

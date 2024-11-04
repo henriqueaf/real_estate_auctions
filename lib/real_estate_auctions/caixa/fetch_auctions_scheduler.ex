@@ -1,10 +1,10 @@
-defmodule RealEstateAuctions.FetchAuctionsScheduler do
+defmodule RealEstateAuctions.Caixa.FetchAuctionsScheduler do
   @moduledoc """
-  Scheduler to start fetching auctions periodically
+  Scheduler to start fetching Caixa auctions periodically
   """
 
   use GenServer
-  alias RealEstateAuctions.AuctionsServices.{CaixaService}
+  alias RealEstateAuctions.Caixa.{Service}
 
   # ================== CLIENT SIDE ==================
   def start() do
@@ -23,7 +23,7 @@ defmodule RealEstateAuctions.FetchAuctionsScheduler do
   def handle_info(:fetch_auctions, _state) do
     IO.puts "=============== Start fetching auctions =================="
 
-    CaixaService.fetch_real_estate_auctions()
+    Service.fetch_auctions()
 
     schedule_process_message(false)
 

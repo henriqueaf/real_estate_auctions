@@ -1,4 +1,4 @@
-defmodule RealEstateAuctions.ApiClients.CaixaApiClient do
+defmodule RealEstateAuctions.Caixa.ApiClient do
   @moduledoc """
   Module responsible to retrieve the CSV file containing the real estate auctions
   list from Caixa API.
@@ -6,7 +6,7 @@ defmodule RealEstateAuctions.ApiClients.CaixaApiClient do
 
   defp api_url, do: Application.get_env(:real_estate_auctions, :caixa_api_url)
 
-  def real_estate_auctions_list_by_state(state) when is_binary(state) do
+  def auctions_csv_by_state(state) when is_binary(state) do
     state
     |> build_url()
     |> make_request()

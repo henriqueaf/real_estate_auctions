@@ -1,17 +1,17 @@
-defmodule RealEstateAuctions.AuctionsServices.CaixaService do
+defmodule RealEstateAuctions.Caixa.Service do
   require Logger
-  alias RealEstateAuctions.ApiClients.{CaixaApiClient}
+  alias RealEstateAuctions.Caixa.{ApiClient}
   alias RealEstateAuctions.{FileUtils}
-  alias RealEstateAuctions.AuctionsServices.CaixaService.{CSVParser}
+  alias RealEstateAuctions.Caixa.{CSVParser}
 
-  defp available_states(), do: ["CE"]
-
-  def fetch_real_estate_auctions() do
+  def fetch_auctions() do
     for state <- available_states() do
-      CaixaApiClient.real_estate_auctions_list_by_state(state)
+      ApiClient.auctions_csv_by_state(state)
       |> handle_api_client_result(state)
     end
   end
+
+  defp available_states(), do: Ecto.Enum.dump_values(RealEstateAuctions.Auction, :state)
 
   defp handle_api_client_result({:ok, file_content}, state) do
     generate_date = CSVParser.get_generate_date(file_content)

@@ -31,7 +31,7 @@ defmodule RealEstateAuctions.FetchAuctionsScheduler do
   end
 
   defp schedule_process_message(execute_immediately?) do
-    execute_in = if execute_immediately?, do: 0, else: 1000 * 60 * 60 * 5 # 5 hours in milliseconds
+    execute_in = if execute_immediately?, do: 0, else: 1000 * 60 * 60 * 24 # 24 hours in milliseconds
 
     Process.send_after(__MODULE__, :fetch_auctions, execute_in)
   end

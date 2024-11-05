@@ -13,10 +13,12 @@ defmodule RealEstateAuctions.Repo.Migrations.CreateAuctions do
       add :address, :string, null: false
       add :start_price, :string, null: false
       add :estimated_price, :string, null: false
-      add :discount_percent, :decimal, precision: 10, scale: 2
+      add :discount_percent, :string, null: false
       add :description, :string
       add :sale_mode, :string, null: false
       add :address_link, :string, null: false
+
+      add :caixa_file_id, references(:caixa_files)
 
       timestamps(type: :utc_datetime)
     end

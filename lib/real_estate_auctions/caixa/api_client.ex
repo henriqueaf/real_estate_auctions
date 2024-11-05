@@ -6,14 +6,14 @@ defmodule RealEstateAuctions.Caixa.ApiClient do
 
   defp api_url, do: Application.get_env(:real_estate_auctions, :caixa_api_url)
 
-  def auctions_csv_by_state(state) when is_binary(state) do
+  def auctions_csv_by_state(state) when is_atom(state) do
     state
     |> build_url()
     |> make_request()
     |> handle_http_response()
   end
 
-  defp build_url(state) when is_binary(state) do
+  defp build_url(state) when is_atom(state) do
     "#{api_url()}/listaweb/Lista_imoveis_#{state}.csv"
   end
 

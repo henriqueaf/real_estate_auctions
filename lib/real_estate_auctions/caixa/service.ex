@@ -16,16 +16,8 @@ defmodule RealEstateAuctions.Caixa.Service do
 
     create_tmp_file(state, generate_date, file_content)
 
-    # case create_caixa_file_and_auctions(state, generate_date, file_content) do
-    #   {:ok, struct} -> Logger.info("CaixaFile created for state: #{struct.state} and generate_date: #{struct.generate_date}")
-    #   {:error, changeset} ->
-    #     error_messages = RealEstateAuctions.TranslateUtils.translate_errors(changeset)
-    #     FileUtils.log_error_in_file("#{__MODULE__} - create_caixa_file/3 - state: #{state} - #{error_messages}")
-    # end
-
     case find_or_create_caixa_file(state, generate_date, file_content) do
       {:ok, caixa_file} ->
-        Logger.info("CaixaFile created for state: #{caixa_file.state} and generate_date: #{caixa_file.generate_date}")
         create_auctions(caixa_file)
       {:error, changeset} ->
         error_messages = RealEstateAuctions.TranslateUtils.translate_errors(changeset)
@@ -37,30 +29,25 @@ defmodule RealEstateAuctions.Caixa.Service do
     FileUtils.log_error_in_file("#{__MODULE__} - handle_api_client_result/1 - state: #{state} - #{reason}")
   end
 
-  # defp create_caixa_file_and_auctions(state, generate_date, file_content) do
-  #   auctions_list = CSVParser.get_auctions_list(file_content)
-
-  #   Queries.create_with_auctions(
-  #     %{generate_date: generate_date, state: state, csv_content: file_content},
-  #     auctions_list
-  #   )
-  # end
-
   defp find_or_create_caixa_file(state, generate_date, file_content) do
     case Queries.get_by([state: state, generate_date: generate_date]) do
-      nil -> Queries.create(%{generate_date: generate_date, state: state, csv_content: file_content})
-      caixa_file -> {:ok, caixa_file}
+      nil ->
+        Logger.info("Creating CaixaFile for state: #{state} and generate_date: #{generate_date}")
+        Queries.create(%{generate_date: generate_date, state: state, csv_content: file_content})
+      caixa_file ->
+        Logger.info("CaixaFile found for state: #{state} and generate_date: #{generate_date}")
+        {:ok, caixa_file}
     end
   end
 
   defp create_auctions(caixa_file) do
     utc_now = DateTime.truncate(DateTime.utc_now, :second)
 
-    auctions_list = CSVParser.get_auctions_list(caixa_file.csv_content)
+    parsed_auctions_list = CSVParser.get_auctions_list(caixa_file.csv_content)
     |> Enum.map(
       &(struct(Auction, &1))
       |> Map.merge(%{
-          state: caixa_file.state,
+          state: String.to_atom(&1.state),
           inserted_at: utc_now,
           updated_at: utc_now,
           caixa_file_id: caixa_file.id
@@ -68,7 +55,7 @@ defmodule RealEstateAuctions.Caixa.Service do
       |> Map.drop([:__struct__, :__meta__, :caixa_file, :id])
     )
 
-    Repo.insert_all(Auction, auctions_list, on_conflict: :nothing)
+    Repo.insert_all(Auction, parsed_auctions_list, on_conflict: :nothing)
   end
 
   defp create_tmp_file(state, generate_date, file_content) do

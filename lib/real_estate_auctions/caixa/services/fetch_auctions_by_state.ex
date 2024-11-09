@@ -1,14 +1,12 @@
-defmodule RealEstateAuctions.Caixa.Service do
+defmodule RealEstateAuctions.Caixa.Services.FetchAuctionsByState do
   require Logger
   alias RealEstateAuctions.Caixa.{ApiClient, CSVParser}
   alias RealEstateAuctions.CaixaFiles.{Queries}
   alias RealEstateAuctions.{Repo, Auction, FileUtils}
 
-  def fetch_auctions() do
-    for state <- Application.get_env(:real_estate_auctions, :available_states) do
-      ApiClient.auctions_csv_by_state(state)
-      |> handle_api_client_result(state)
-    end
+  def call(state) do
+    ApiClient.auctions_csv_by_state(state)
+    |> handle_api_client_result(state)
   end
 
   defp handle_api_client_result({:ok, file_content}, state) do
@@ -41,19 +39,8 @@ defmodule RealEstateAuctions.Caixa.Service do
   end
 
   defp create_auctions(caixa_file) do
-    utc_now = DateTime.truncate(DateTime.utc_now, :second)
-
     parsed_auctions_list = CSVParser.get_auctions_list(caixa_file.csv_content)
-    |> Enum.map(
-      &(struct(Auction, &1))
-      |> Map.merge(%{
-          state: String.to_atom(&1.state),
-          inserted_at: utc_now,
-          updated_at: utc_now,
-          caixa_file_id: caixa_file.id
-        })
-      |> Map.drop([:__struct__, :__meta__, :caixa_file, :id])
-    )
+    |> Enum.map(&(Auction.map_to_auction(&1, caixa_file.id)))
 
     Repo.insert_all(Auction, parsed_auctions_list, on_conflict: :nothing)
   end

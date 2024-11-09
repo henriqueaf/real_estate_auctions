@@ -4,7 +4,7 @@ defmodule RealEstateAuctions.Caixa.FetchAuctionsScheduler do
   """
 
   use GenServer
-  alias RealEstateAuctions.Caixa.{Service}
+  alias RealEstateAuctions.Caixa.Services.{FetchAuctionsByState}
 
   # ================== CLIENT SIDE ==================
   def start() do
@@ -23,7 +23,10 @@ defmodule RealEstateAuctions.Caixa.FetchAuctionsScheduler do
   def handle_info(:fetch_auctions, _state) do
     IO.puts "=============== Start fetching auctions =================="
 
-    Service.fetch_auctions()
+    for state <- Application.get_env(:real_estate_auctions, :available_states) do
+      FetchAuctionsByState.call(state)
+      :timer.sleep(10000) # 10 seconds in milliseconds
+    end
 
     schedule_process_message(false)
 

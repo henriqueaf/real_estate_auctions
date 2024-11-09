@@ -1,7 +1,7 @@
-defmodule RealEstateAuctions.Auctions.Create do
+defmodule RealEstateAuctions.Auctions.Queries do
   alias RealEstateAuctions.{Auction, Repo}
 
-  def call(params) do
+  def create(params) do
     %Auction{}
     |> Auction.changeset(params)
     |> Repo.insert()

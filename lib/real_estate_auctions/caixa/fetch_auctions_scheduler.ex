@@ -4,7 +4,7 @@ defmodule RealEstateAuctions.Caixa.FetchAuctionsScheduler do
   """
 
   use GenServer
-  alias RealEstateAuctions.Caixa.Services.{FetchAuctionsByState}
+  alias RealEstateAuctions.Caixa.Services.{FetchAuctionsByState, FetchAuctionsAdditionalInfo}
 
   # ================== CLIENT SIDE ==================
   def start() do
@@ -27,6 +27,10 @@ defmodule RealEstateAuctions.Caixa.FetchAuctionsScheduler do
       FetchAuctionsByState.call(state)
       :timer.sleep(10000) # 10 seconds in milliseconds
     end
+
+    Task.start(fn ->
+      FetchAuctionsAdditionalInfo.call()
+    end)
 
     schedule_process_message(false)
 

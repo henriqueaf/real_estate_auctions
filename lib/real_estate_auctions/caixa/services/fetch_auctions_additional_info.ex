@@ -16,9 +16,7 @@ defmodule RealEstateAuctions.Caixa.Services.FetchAuctionsAdditionalInfo do
   defp query_auctions_missing_additional_info() do
     from(
       a in Auction,
-      where: is_nil(a.real_estate_type)
-        or is_nil(a.real_estate_registration)
-        or is_nil(a.real_estate_inscription)
+      where: is_nil(a.additional_info)
     )
   end
 
@@ -41,24 +39,28 @@ defmodule RealEstateAuctions.Caixa.Services.FetchAuctionsAdditionalInfo do
     case Enum.empty?(spans) do
       true ->
         Logger.error("Page content not expected. Probably the auction is finished for this sale_mode.")
+        if String.contains?(html, ["Ocorreu um erro", "não está mais disponível"]) do
+          update_auction_additional_info(:not_found, auction)
+        end
       false -> spans
         |> Enum.map(fn span ->
           case span do
-            {"span", [], ["Tipo de imóvel: ", {"strong", [], [real_estate_type]}]} -> %{real_estate_type: real_estate_type}
-            {"span", [], ["Matrícula(s): ", {"strong", [], [real_estate_registration]}]} -> %{real_estate_registration: real_estate_registration}
-            {"span", [], ["Inscrição imobiliária: ", {"strong", [], [real_estate_inscription]}]} -> %{real_estate_inscription: real_estate_inscription}
-            {"span", [], ["Averbação dos leilões negativos: ", {"strong", [], [registration_of_negative_auctions]}]} -> %{registration_of_negative_auctions: String.trim(registration_of_negative_auctions)}
+            {"span", [], ["Tipo de imóvel: ", {"strong", [], [real_estate_type]}]} -> %{"real_estate_type" => real_estate_type}
+            {"span", [], ["Matrícula(s): ", {"strong", [], [real_estate_registration]}]} -> %{"real_estate_registration" => real_estate_registration}
+            {"span", [], ["Inscrição imobiliária: ", {"strong", [], [real_estate_inscription]}]} -> %{"real_estate_inscription" => real_estate_inscription}
+            {"span", [], ["Averbação dos leilões negativos: ", {"strong", [], [registration_of_negative_auctions]}]} -> %{"registration_of_negative_auctions" => String.trim(registration_of_negative_auctions)}
             _ -> nil
           end
         end)
         |> Enum.filter(&(!is_nil(&1)))
         |> Enum.reduce(&Map.merge/2)
         |> Map.merge(%{
-          registration_file_path: registration_file_path(auction),
-          notice_file_path: notice_file_path(auction, document),
-          financial_conditions_info: Floki.find(document, "#dadosImovel .related-box p:last-child") |> Floki.text
+          "registration_file_path" => registration_file_path(auction),
+          "notice_file_path" => notice_file_path(auction, document),
+          "real_estate_picture_srcs" => Floki.find(document, "#galeria-imagens .thumbnails img") |> Floki.attribute("src"),
+          "financial_conditions_info" => Floki.find(document, "#dadosImovel .related-box p:last-child") |> Floki.text
         })
-        |> update_auction(auction)
+        |> update_auction_additional_info(auction)
     end
   end
 
@@ -84,9 +86,14 @@ defmodule RealEstateAuctions.Caixa.Services.FetchAuctionsAdditionalInfo do
     end
   end
 
-  defp update_auction(additional_info_attrs, %Auction{} = auction) do
+  defp update_auction_additional_info(additional_info_attrs, %Auction{} = auction) do
     auction
-    |> Auction.changeset(additional_info_attrs)
+    |> Auction.changeset(%{additional_info: additional_info_attrs})
+    |> Repo.update()
+  end
+  defp update_auction_additional_info(:not_found, %Auction{} = auction) do
+    auction
+    |> Auction.changeset(%{additional_info: Auction.set_additional_info_map_values("not found")})
     |> Repo.update()
   end
 end

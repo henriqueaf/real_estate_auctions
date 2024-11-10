@@ -3,8 +3,14 @@ defmodule RealEstateAuctions.Auction do
   import Ecto.Changeset
 
   @primary_key {:id, :binary_id, autogenerate: true}
-  @required_fields [:estimated_price, :state, :address, :description, :number, :city, :neighborhood, :start_price, :discount_percent, :sale_mode, :address_link]
-  @not_required_fields [:real_estate_type, :real_estate_registration, :real_estate_inscription, :registration_of_negative_auctions, :financial_conditions_info, :registration_file_path, :notice_file_path]
+  @required_fields [:estimated_price, :state, :address, :description, :number, :city, :start_price, :discount_percent, :sale_mode, :address_link]
+  @not_required_fields [:additional_info, :neighborhood]
+
+  defp additional_info_keys do
+    ~w{real_estate_type real_estate_registration real_estate_inscription
+    registration_of_negative_auctions registration_file_path notice_file_path
+    real_estate_picture_srcs financial_conditions_info}
+  end
 
   schema "auctions" do
     belongs_to :caixa_file, RealEstateAuctions.CaixaFile
@@ -20,14 +26,7 @@ defmodule RealEstateAuctions.Auction do
     field :discount_percent, :string
     field :sale_mode, :string
     field :address_link, :string
-    # Additional info
-    field :real_estate_type, :string
-    field :real_estate_registration, :string # Matrícula
-    field :real_estate_inscription, :string # Inscrição imobiliária (IPTU)
-    field :registration_of_negative_auctions, :string
-    field :financial_conditions_info, :string
-    field :registration_file_path, :string
-    field :notice_file_path, :string
+    field :additional_info, :map
 
     timestamps(type: :utc_datetime)
   end
@@ -37,6 +36,14 @@ defmodule RealEstateAuctions.Auction do
     auction
     |> cast(attrs, @required_fields ++ @not_required_fields)
     |> validate_required(@required_fields)
+    |> validate_change(:additional_info, fn (:additional_info, new_additional_info) ->
+      IO.inspect(Enum.map(additional_info_keys(), &(Map.has_key?(new_additional_info, &1))))
+      cond do
+        Enum.sort(additional_info_keys()) == Enum.sort(Map.keys(new_additional_info)) -> []
+
+        true -> [additional_info: {"wrong keys", exact_keys: additional_info_keys()}]
+      end
+    end)
     |> unique_constraint([:number, :state, :sale_mode])
   end
 
@@ -51,5 +58,9 @@ defmodule RealEstateAuctions.Auction do
       caixa_file_id: caixa_file_id
     })
     |> Map.drop([:__struct__, :__meta__, :caixa_file, :id])
+  end
+
+  def set_additional_info_map_values(value) do
+    Map.new(additional_info_keys(), &({&1, value}))
   end
 end

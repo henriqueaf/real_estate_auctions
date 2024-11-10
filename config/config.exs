@@ -65,7 +65,7 @@ config :phoenix, :json_library, Jason
 config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
 
 # Allowed Caixa states
-config :real_estate_auctions, available_states: [:CE]
+config :real_estate_auctions, available_states: [:AC, :AL, :AP, :AM, :BA, :CE, :DF, :ES, :GO, :MA, :MT, :MS, :MG, :PA, :PB, :PR, :RN, :RS, :RO, :RR, :SC]
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

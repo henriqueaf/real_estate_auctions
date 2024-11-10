@@ -42,7 +42,10 @@ defmodule RealEstateAuctions.Caixa.Services.FetchAuctionsByState do
     parsed_auctions_list = CSVParser.get_auctions_list(caixa_file.csv_content)
     |> Enum.map(&(Auction.map_to_auction(&1, caixa_file.id)))
 
-    Repo.insert_all(Auction, parsed_auctions_list, on_conflict: :nothing)
+    # When there are duplicated/conflict records it will not raise errors due to
+    # the "on_conflict: :nothing option"
+    Enum.chunk_every(parsed_auctions_list, 1000)
+    |> (fn(chuncked) -> Enum.map(chuncked, &(Repo.insert_all(Auction, &1, on_conflict: :nothing))) end).()
   end
 
   defp create_tmp_file(state, generate_date, file_content) do

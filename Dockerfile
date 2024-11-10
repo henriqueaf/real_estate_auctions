@@ -9,7 +9,7 @@ ENV APP_HOME=/$ARG_APP_NAME
 
 WORKDIR $APP_HOME
 
-RUN apk add git inotify-tools
+RUN apk add --update git inotify-tools nodejs npm
 
 # Install Hex + Rebar
 RUN mix do local.hex --force, local.rebar --force

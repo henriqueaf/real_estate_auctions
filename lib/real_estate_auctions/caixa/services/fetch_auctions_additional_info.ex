@@ -25,13 +25,13 @@ defmodule RealEstateAuctions.Caixa.Services.FetchAuctionsAdditionalInfo do
 
     case ApiClient.auction_details_page(auction.address_link) do
       {:ok, html} ->
-        save_additional_info(html, auction)
+        parse_additional_info(html, auction)
       {:error, reason} ->
         Logger.error("Error requesting additional data for auction(#{auction.id}): #{IO.inspect(reason)}")
     end
   end
 
-  defp save_additional_info(html, auction) do
+  defp parse_additional_info(html, auction) do
     {:ok, document} = Floki.parse_document(html)
 
     spans = Floki.find(document, "#dadosImovel .content-wrapper.clearfix .content div:first-of-type span")
@@ -42,13 +42,14 @@ defmodule RealEstateAuctions.Caixa.Services.FetchAuctionsAdditionalInfo do
         if String.contains?(html, ["Ocorreu um erro", "não está mais disponível"]) do
           update_auction_additional_info(:not_found, auction)
         end
-      false -> spans
+      false ->
+        spans
         |> Enum.map(fn span ->
           case span do
-            {"span", [], ["Tipo de imóvel: ", {"strong", [], [real_estate_type]}]} -> %{"real_estate_type" => real_estate_type}
-            {"span", [], ["Matrícula(s): ", {"strong", [], [real_estate_registration]}]} -> %{"real_estate_registration" => real_estate_registration}
-            {"span", [], ["Inscrição imobiliária: ", {"strong", [], [real_estate_inscription]}]} -> %{"real_estate_inscription" => real_estate_inscription}
-            {"span", [], ["Averbação dos leilões negativos: ", {"strong", [], [registration_of_negative_auctions]}]} -> %{"registration_of_negative_auctions" => String.trim(registration_of_negative_auctions)}
+            {"span", _, ["Tipo de imóvel: ", {_, _, [real_estate_type]}]} -> %{"real_estate_type" => real_estate_type}
+            {"span", _, ["Matrícula(s): ", {_, _, [real_estate_registration]}]} -> %{"real_estate_registration" => real_estate_registration}
+            {"span", _, ["Inscrição imobiliária: ", {_, _, [real_estate_inscription]}]} -> %{"real_estate_inscription" => real_estate_inscription}
+            {"span", _, ["Averbação dos leilões negativos: ", {_, _, [registration_of_negative_auctions]}]} -> %{"registration_of_negative_auctions" => String.trim(registration_of_negative_auctions)}
             _ -> nil
           end
         end)
@@ -79,21 +80,21 @@ defmodule RealEstateAuctions.Caixa.Services.FetchAuctionsAdditionalInfo do
 
       case is_nil(onclick_content) do
         true ->
-          Logger.warning("Onclick link for notice_file_path not found. Probably this auction has changed the sale_mode.")
+          Logger.error("Onclick link for notice_file_path not found. Probably this auction has changed the sale_mode.")
           nil
         false -> String.slice(onclick_content, 21..-3//1)
       end
     end
   end
 
-  defp update_auction_additional_info(additional_info_attrs, %Auction{} = auction) do
-    auction
-    |> Auction.changeset(%{additional_info: additional_info_attrs})
-    |> Repo.update()
-  end
   defp update_auction_additional_info(:not_found, %Auction{} = auction) do
     auction
     |> Auction.changeset(%{additional_info: Auction.set_additional_info_map_values("not found")})
+    |> Repo.update()
+  end
+  defp update_auction_additional_info(additional_info_attrs, %Auction{} = auction) do
+    auction
+    |> Auction.changeset(%{additional_info: additional_info_attrs})
     |> Repo.update()
   end
 end

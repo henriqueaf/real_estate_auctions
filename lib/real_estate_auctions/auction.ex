@@ -37,7 +37,6 @@ defmodule RealEstateAuctions.Auction do
     |> cast(attrs, @required_fields ++ @not_required_fields)
     |> validate_required(@required_fields)
     |> validate_change(:additional_info, fn (:additional_info, new_additional_info) ->
-      IO.inspect(Enum.map(additional_info_keys(), &(Map.has_key?(new_additional_info, &1))))
       cond do
         Enum.sort(additional_info_keys()) == Enum.sort(Map.keys(new_additional_info)) -> []
 

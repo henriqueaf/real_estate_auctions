@@ -7,10 +7,11 @@ defmodule RealEstateAuctions.Caixa.Services.FetchAuctionsAdditionalInfo do
   def call() do
     query_auctions_missing_additional_info()
     |> Repo.all()
-    |> Enum.each(fn auction ->
+    |> Task.async_stream(fn auction ->
       fetch_auction_additional_info(auction)
       :timer.sleep(1000)
-    end)
+    end, ordered: false, max_concurrency: 2, timeout: 10000) # Execute the tasks in parallel
+    |> Stream.run()
   end
 
   defp query_auctions_missing_additional_info() do

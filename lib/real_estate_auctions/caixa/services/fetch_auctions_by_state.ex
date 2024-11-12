@@ -12,8 +12,6 @@ defmodule RealEstateAuctions.Caixa.Services.FetchAuctionsByState do
   defp handle_api_client_result({:ok, file_content}, state) do
     generate_date = CSVParser.get_generate_date(file_content)
 
-    create_tmp_file(state, generate_date, file_content)
-
     case find_or_create_caixa_file(state, generate_date, file_content) do
       {:ok, caixa_file} ->
         create_auctions(caixa_file)
@@ -48,14 +46,14 @@ defmodule RealEstateAuctions.Caixa.Services.FetchAuctionsByState do
     |> (fn(chuncked) -> Enum.map(chuncked, &(Repo.insert_all(Auction, &1, on_conflict: :nothing))) end).()
   end
 
-  defp create_tmp_file(state, generate_date, file_content) do
-    parsed_generate_date = generate_date
-    |> String.replace("/", "-")
+  # defp create_tmp_file(state, generate_date, file_content) do
+  #   parsed_generate_date = generate_date
+  #   |> String.replace("/", "-")
 
-    file_name = "caixa_lista_#{state}_#{parsed_generate_date}.csv"
+  #   file_name = "caixa_lista_#{state}_#{parsed_generate_date}.csv"
 
-    if !File.exists?("#{FileUtils.tmp_folder_path()}/#{file_name}") do
-      FileUtils.save_file_in_tmp(file_name, file_content)
-    end
-  end
+  #   if !File.exists?("#{FileUtils.tmp_folder_path()}/#{file_name}") do
+  #     FileUtils.save_file_in_tmp(file_name, file_content)
+  #   end
+  # end
 end

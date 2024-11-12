@@ -25,7 +25,7 @@ defmodule RealEstateAuctions.Caixa.FetchAuctionsScheduler do
 
     for state <- Application.get_env(:real_estate_auctions, :available_states) do
       FetchAuctionsByState.call(state)
-      :timer.sleep(5000) # 5 seconds in milliseconds
+      :timer.sleep(3000) # 3 seconds in milliseconds
     end
 
     Task.start(fn ->
